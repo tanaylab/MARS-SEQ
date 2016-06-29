@@ -55,7 +55,8 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 					row.names = NULL, stringsAsFactors = FALSE,
 					check.names = FALSE, na.strings = c("NA", "---"),
 					blank.lines.skip=TRUE, comment.char="#", header=TRUE)
-		colnames(umis_tmp)[1] <- "row.names"
+		colnames(umis_tmp)[1] <- "Row.names"
+		rownames(umis_tmp)    <- umis_tmp$Row.names
 		if (length(unique(umis_tmp$row.names))!=length(umis_tmp$row.names)){
 			return(paste("Error: Duplicated row names in ",files_list[i],sep=""))				
 		}
@@ -70,7 +71,7 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 			scr_scdb  <- ifelse(is.null(scdb_list),finfo_tmp[grep("db",finfo_tmp)[1]],scdb_list[i]) 
 		}
 		if (i!=1){
-			umis <- merge(umis, umis_tmp, by.x="row.names", by.y=0, all=T)
+			umis <- merge(umis[,-1], umis_tmp[,-1], by.x="row.names", by.y=0, all=T)
 			rnames_union   <- length(union(umis$row.names,umis_tmp$row.names))
 			rnames_inter   <- length(intersect(umis$row.names,umis_tmp$row.names))
 			rnames_missing <- rnames_union-rnames_inter
@@ -80,7 +81,7 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 			message("New dim(umis) ", paste(dim(umis), collapse=" "))
 			rnames_miss_total <- rnames_miss_total+rnames_missing
 			finfo_tmp     <- strsplit(files_list[i],split="/")
-			finfo_tmp <- unlist(finfo_tmp)
+			finfo_tmp     <- unlist(finfo_tmp)
 			scr_batch_tmp <- gsub(".txt","",finfo_tmp[length(finfo_tmp)]) 
 			scr_scdb_tmp  <- ifelse(is.null(scdb_list),finfo_tmp[grep("db",finfo_tmp)[1]],scdb_list[i]) 
 			scr_batch <- c(scr_batch,scr_batch_tmp)
