@@ -30,19 +30,26 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 	
 	if(Info_as_file){
 		files_list <- readLines(con=as.character(scr_file_path))
-		scdb_list  <- ifelse(!is.null(scr_scdb_list), readLines(con=as.character(scr_scdb_list)), NULL)
+		if (!is.null(scr_scdb_list)){
+			scdb_list <- readLines(con=as.character(scr_scdb_list))
+		}else{
+			scdb_list <- NULL
+		}
 	}else{
 		files_list <- as.character(scr_file_path)
-		scdb_list  <- ifelse(!is.null(scr_scdb_list),as.character(scr_scdb_list), NULL)
+		if (!is.null(scr_scdb_list)){
+			scdb_list <- as.character(scr_scdb_list)
+		}else{
+			scdb_list <- NULL
+		}
 	}
 	if(!is.null(scdb_list) & length(files_list)!=length(scdb_list)){
-		return("List of files and list of db annotations have different length. Each file must include the corresponding db annotation")
+		return(message("Error: List of files and list of db annotations have different length. Each file must include the corresponding db annotation"))
 	}
 	
 	for (i in 1:length(files_list)){
 		if (is.null(scdb_list) & length(grep("db",files_list[i]))<1){
-			return(paste("Error: No db annotation list was provided as well as no 'db' pattern was found in ",
-				files_list[i],sep=""))
+			return(message(paste("Error: No db annotation list was provided as well as no 'db' pattern was found in ",files_list[i],sep="")))
 		}
 		umis_tmp  <- read.delim(files_list[i],
 					row.names = NULL, stringsAsFactors = FALSE,
