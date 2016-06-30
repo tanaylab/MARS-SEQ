@@ -88,11 +88,48 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 			scr_scdb  <- c(scr_scdb,scr_scdb_tmp)			
 		}
 	}
-	rownames(umis) <- umis$row.names
 	no_ercc <- grep("ERCC", rownames(umis), invert=T)
 	umis    <- umis[no_ercc, -1]
 	f       <- colSums(umis)>min_umis_n
 	umis    <- umis[,f]
 	f_cells <- sum(!f)
 	return(list(umis=umis,umis_path=files_list,scr_batch=scr_batch,scr_scdb=scr_scdb,unmatched_rownames_n=rnames_miss_total,filtered_cells_n=f_cells))
+}
+
+#########################
+# scr_downsamp
+
+### Description
+# Performs downsampling and normalization of umis.
+
+## Usage
+# scr_downsamp(scr_umis, dsamp_n)
+
+## Arguments
+
+#  scr_umis (Matrix): Numeric matrix of umis with genes as rownames and cells as columns.
+
+#  dsamp_n (Integer): Target number of molecules to perform downsampling.
+
+## Function .downsamp_one performs downsampling in a given cell. It is meant to be purely internal to the package.
+# v (numeric) is the cell column in a umis table
+# n (integer) is the target number molecules to sample from v without replacement
+## Brief explanation of how this internal function works:
+# In .downsamp_one, rep(1:length(v),times=v) repeat each gene index times the number of umis found in that gene
+# in order to sample n elements from it (usign sample(rep(1:length(v),times=v),replace=F,size=n)). 
+# Then, hist(sample(rep(1:length(v),times=v),replace=F,size=n),0.5+0:length(v),plot=F)$counts outputs how many
+# times a gene index was sampled (Breaks are used to fit gene indexes, so it counts umis sampled per gene). 
+# That is, the resulting downsampled cell.
+
+.downsamp_one <- function(v,n){
+  hist(sample(rep(1:length(v),times=v),replace=F,size=n),0.5+0:length(v),plot=F)$counts
+}
+
+scr_downsamp <- function(scr_umis, dsamp_n){
+
+	scr_umis_ds   <- apply(scr_umis[, colSums(scr_umis)>=dsamp_n], 2, .downsamp_one, dsamp_n)
+	scr_umis_norm <- round(1000*t(t(scr_umis)/colSums(scr_umis)),2)
+	rownames(scr_umis_ds)   <- rownames(scr_umis)
+	rownames(scr_umis_norm) <- rownames(scr_umis)
+	return(list(scr_umis_ds=scr_umis_ds,scr_umis_norm=scr_umis_norm,target_dsamp_n=dsamp_n))
 }
