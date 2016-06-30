@@ -1,11 +1,11 @@
 #########################
-# scr_load_umis
+# scram.load_umis
 
 ### Description
 # Loads and merges data sets of umis. Merging occurs only if loading more than one data set.
 
 ## Usage
-# scr_load_umis(scr_file_path, scr_scdb_list=NULL, Info_as_files=TRUE, min_umis_n=0)
+# scram.load_umis(scr_file_path, scr_scdb_list=NULL, Info_as_files=TRUE, min_umis_n=0)
 
 ## Arguments
 
@@ -18,17 +18,17 @@
 # recognized as the data base (eg. /my/path/scdb.10-13/). If no file is provided and no pattern is found, 
 # an error will be prompted. Default is NULL.
  
-#  Info_as_files (Logical): Logical value indicating if file or vector is provided. Files are expected by
+#  info_as_files (Logical): Logical value indicating if file or vector is provided. Files are expected by
 # default.
 
 #  min_umis_n (Integer): Minimum number of umis to consider a cell into the umis data set. Default is 0,
 # then no cells are filtered out.
 
-scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, min_umis_n=0){
+scram.load_umis <- function(scr_file_path, scr_scdb_list=NULL, info_as_file=TRUE, min_umis_n=0){
 
 	rnames_miss_total <- 0
 	
-	if(Info_as_file){
+	if(info_as_file){
 		files_list <- readLines(con=as.character(scr_file_path))
 		if (!is.null(scr_scdb_list)){
 			scdb_list <- readLines(con=as.character(scr_scdb_list))
@@ -44,27 +44,32 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 		}
 	}
 	if(!is.null(scdb_list) & length(files_list)!=length(scdb_list)){
-		return(message("Error: List of files and list of db annotations have different length. Each file must include the corresponding db annotation"))
+		stop("Error: List of files and list of db annotations have different length. Each file must include the corresponding db annotation")
 	}
 	
 	for (i in 1:length(files_list)){
 		if (is.null(scdb_list) & length(grep("db",files_list[i]))<1){
-			return(message(paste("Error: No db annotation list was provided as well as no 'db' pattern was found in ",files_list[i],sep="")))
+			stop(paste("Error: No db annotation list was provided as well as no 'db' pattern was found in ",files_list[i],sep=""))
 		}
-		umis_tmp  <- read.delim(files_list[i],
-					row.names = NULL, stringsAsFactors = FALSE,
-					check.names = FALSE, na.strings = c("NA", "---"),
-					blank.lines.skip=TRUE, comment.char="#", header=TRUE)
-		colnames(umis_tmp)[1] <- "Row.names"
+		message("\tReading umis table number ",i)
+		cell_names <- scan("~eladch/proj/scRNA/analysis/e8.5_2015-06-25/umitab/umitab.txt",what=character(),nlines=1)
+		umis_tmp   <- data.table::fread("~eladch/proj/scRNA/analysis/e8.5_2015-06-25/umitab/umitab.txt",header=FALSE,skip=1)
+		umis_tmp   <- as.data.frame(umis_tmp)
+		if (length(cell_names)==length(colnames(umis_tmp))-1){
+			colnames(umis_tmp) <- c("Row.names",cell_names)
+		}else{
+			colnames(umis_tmp)    <- cell_names
+			colnames(umis_tmp)[1] <- "Row.names"
+		}
 		rownames(umis_tmp)    <- umis_tmp$Row.names
 		if (length(unique(umis_tmp$row.names))!=length(umis_tmp$row.names)){
-			return(paste("Error: Duplicated row names in ",files_list[i],sep=""))				
+			stop(paste("Error: Duplicated row names in ",files_list[i],sep="")				
 		}
 		if (i==1){
 			umis <- umis_tmp
 			rm(umis_tmp)
 			message("Umis table: ",files_list[i])
-			message("dim(umis) ", paste(dim(umis), collapse=" "))
+			message("dim(umis) ", paste(nrow(umis),ncol(umis)-1, collapse=" "))
 			finfo_tmp <- strsplit(files_list[i],split="/")
 			finfo_tmp <- unlist(finfo_tmp)
 			scr_batch <- gsub(".txt","",finfo_tmp[length(finfo_tmp)])
@@ -78,7 +83,7 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 			rm(umis_tmp)
 			message("After merging umis table: ",files_list[i])
 			message("Number of unmatched row names = ",rnames_missing)
-			message("New dim(umis) ", paste(dim(umis), collapse=" "))
+			message("New dim(umis) ", paste(nrow(umis),ncol(umis)-1, collapse=" "))
 			rnames_miss_total <- rnames_miss_total+rnames_missing
 			finfo_tmp     <- strsplit(files_list[i],split="/")
 			finfo_tmp     <- unlist(finfo_tmp)
@@ -97,13 +102,13 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 }
 
 #########################
-# scr_downsamp
+# scram.downsamp
 
 ### Description
 # Performs downsampling and normalization of umis.
 
 ## Usage
-# scr_downsamp(scr_umis, dsamp_n)
+# scram.downsamp(scr_umis, dsamp_n)
 
 ## Arguments
 
@@ -112,7 +117,7 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
 #  dsamp_n (Integer): Target number of molecules to perform downsampling.
 
 ## Function .downsamp_one performs downsampling in a given cell. It is meant to be purely internal to the package.
-# v (numeric) is the cell column in a umis table
+# v (numeric vector) is the cell column in a umis table
 # n (integer) is the target number molecules to sample from v without replacement
 ## Brief explanation of how this internal function works:
 # In .downsamp_one, rep(1:length(v),times=v) repeat each gene index times the number of umis found in that gene
@@ -125,11 +130,15 @@ scr_load_umis <- function(scr_file_path, scr_scdb_list=NULL, Info_as_file=TRUE, 
   hist(sample(rep(1:length(v),times=v),replace=F,size=n),0.5+0:length(v),plot=F)$counts
 }
 
-scr_downsamp <- function(scr_umis, dsamp_n){
+scram.downsamp <- function(scr_umis, dsamp_n, normalize=TRUE){
 
 	scr_umis_ds   <- apply(scr_umis[, colSums(scr_umis)>=dsamp_n], 2, .downsamp_one, dsamp_n)
-	scr_umis_norm <- round(1000*t(t(scr_umis)/colSums(scr_umis)),2)
 	rownames(scr_umis_ds)   <- rownames(scr_umis)
-	rownames(scr_umis_norm) <- rownames(scr_umis)
+	if(normalize){
+		scr_umis_norm <- round(1000*t(t(scr_umis)/colSums(scr_umis)),2)
+		rownames(scr_umis_norm) <- rownames(scr_umis)
+	}else{
+		scr_umis_norm=NULL
+	}
 	return(list(scr_umis_ds=scr_umis_ds,scr_umis_norm=scr_umis_norm,target_dsamp_n=dsamp_n))
 }
