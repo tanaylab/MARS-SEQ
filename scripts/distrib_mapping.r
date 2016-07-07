@@ -24,7 +24,7 @@ seq_batch_details[is.na(seq_batch_details)]=""
 R1_file_path=paste("raw_reads",seq_batch_id,fastq_details$R1_file,sep="/")
 R2_file_path=paste("raw_reads",seq_batch_id,fastq_details$R2_file,sep="/")
 prefix=gsub(".fastq.gz","",fastq_details$R1_file)
-fn=paste(prefix,".fastq",sep="")
+fn=paste(prefix,".fastq.gz",sep="")
 labeled_fastq_path=paste("_labeled_raw_reads",seq_batch_id,fn,sep="/")
 extract_labels_stats_path=paste("_temp/QC",seq_batch_id,paste(prefix,".txt",sep=""),sep="/")
 mapped_sam_path=paste("/tmp/scRNA_",seq_batch_id,"_",prefix,".sam",sep="")
@@ -80,12 +80,12 @@ if (ok!=0){
   stop1("ERROR: bowtie2 crashed!")
 }
 
-cmd2.5=paste("gzip -f",labeled_fastq_path)
-message(cmd2.5)
-ok=system(cmd2.5)
-if (ok!=0){
-  stop1("ERROR!")
-}
+#cmd2.5=paste("gzip -f",labeled_fastq_path)
+#message(cmd2.5)
+#ok=system(cmd2.5)
+#if (ok!=0){
+#  stop1("ERROR!")
+#}
 
 flag_counts=table(read.table(pipe(paste("grep -v ^@ ",mapped_sam_path," | cut -f2",sep="")))[,1])
 
