@@ -132,8 +132,10 @@ my $non_polyT_counter=0;
 my $unknown_pool_barcode_counter=0;
 my $counter=0;
 
-open(DATA, $r1_file) || die "cannot open file $r1_file.\n";
-open(DATA2,$r2_file) || die "Cannot open file $r2_file.\n";
+my $r1_open_cmd = ($r1_file =~ /\.gz$/) ? "gzip -d -c $r1_file |" : $r1_file; 
+my $r2_open_cmd = ($r2_file =~ /\.gz$/) ? "gzip -d -c $r2_file |" : $r2_file;
+open(DATA, $r1_open_cmd) || die "cannot open file $r1_file.\n";
+open(DATA2,$r2_open_cmd) || die "cannot open file $r2_file.\n";
 open(OUT, ">$out_fastq_file") || die "cannot open file $out_fastq_file to write.\n";
 
 

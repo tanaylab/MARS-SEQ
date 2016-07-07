@@ -41,25 +41,25 @@ if (!file.exists(paste("_temp/QC/",seq_batch_id,sep=""))){
   dir.create(paste("_temp/QC/",seq_batch_id,sep=""))
 }
 
- gzip_r1_flag=F
-if (substr(R1_file_path,nchar(R1_file_path)-2,nchar(R1_file_path))==".gz"){
-  new_R1_file_path=paste("/tmp/scRNA_",seq_batch_id,"_",substr(fastq_details$R1_file,1,nchar(fastq_details$R1_file)-3),sep="")
-  cmd01=paste("gzip -dc",R1_file_path,">",new_R1_file_path)
-  message(cmd01)
-  system(cmd01)
-  R1_file_path=new_R1_file_path
-  gzip_r1_flag=T
-}
+gzip_r1_flag=F
+#if (substr(R1_file_path,nchar(R1_file_path)-2,nchar(R1_file_path))==".gz"){
+#  new_R1_file_path=paste("/tmp/scRNA_",seq_batch_id,"_",substr(fastq_details$R1_file,1,nchar(fastq_details$R1_file)-3),sep="")
+#  cmd01=paste("gzip -dc",R1_file_path,">",new_R1_file_path)
+#  message(cmd01)
+#  system(cmd01)
+#  R1_file_path=new_R1_file_path
+#  gzip_r1_flag=T
+#}
 
 gzip_r2_flag=F
-if (substr(R2_file_path,nchar(R2_file_path)-2,nchar(R2_file_path))==".gz"){
-  new_R2_file_path=paste("/tmp/scRNA_",seq_batch_id,"_",substr(fastq_details$R2_file,1,nchar(fastq_details$R2_file)-3),sep="")
-  cmd02=paste("gzip -dc",R2_file_path,">",new_R2_file_path)
-  message(cmd02)
-  system(cmd02)
-  R2_file_path=new_R2_file_path
-  gzip_r2_flag=T
-}
+#if (substr(R2_file_path,nchar(R2_file_path)-2,nchar(R2_file_path))==".gz"){
+#  new_R2_file_path=paste("/tmp/scRNA_",seq_batch_id,"_",substr(fastq_details$R2_file,1,nchar(fastq_details$R2_file)-3),sep="")
+#  cmd02=paste("gzip -dc",R2_file_path,">",new_R2_file_path)
+#  message(cmd02)
+#  system(cmd02)
+#  R2_file_path=new_R2_file_path
+#  gzip_r2_flag=T
+#}
 
 
 
