@@ -14,7 +14,7 @@ task_id=argv[1]
 scripts_path=argv[2]
 status_fn=argv[3]
 #task_id=1
-config=as.data.frame(t(read.table("config/config.txt",sep="=",header=F,stringsAsFactors=F,row.names=1)))
+config=as.data.frame(t(read.table("config/config.txt",sep="=",header=F,stringsAsFactors=F,row.names=1)), stringsAsFactors=F)
 fastq_list=read.table("_temp/fastq_list.txt",header=T,stringsAsFactors=F)
 fastq_details=fastq_list[task_id,]
 seq_batches=read.delim("annotations/seq_batches.txt",header=T,stringsAsFactors=F)
@@ -73,7 +73,20 @@ additional_bowtie_params=""
 if (!is.null(config$bowtie_params)){
   additional_bowtie_params=paste(" ",config$bowtie_params,sep="")
 }
-cmd2=paste(config$bowtie_bin, "-x",config$bowtie_index,"-U",labeled_fastq_path,"-S",mapped_sam_path,additional_bowtie_params,sep=" ")
+cmd2=paste(config$bowtie_bin, "-x",config$bowtie_index,"-U",labeled_fastq_path,additional_bowtie_params,sep=" ")
+if (!is.na(config$maternal_bcf) || !is.na(config$paternal_bcf)) {
+    bcfs = character()
+    if (!is.na(config$maternal_bcf)) {
+        bcfs = c(bcfs, config$maternal_bcf)
+    }
+    if (!is.na(config$paternal_bcf)) {
+        bcfs = c(bcfs, config$paternal_bcf)
+    }
+    hyppy = paste0("--bcf", 1:length(bcfs), " ",  bcfs, collapse=" ")
+    hyppy = paste0("~/src/tlsrc/tools/hyppy/hyp.py ", hyppy)
+    cmd2 = paste0(cmd2, " | ", hyppy)
+}
+cmd2 = paste0("/bin/bash -c 'source ~/.bashrc;", cmd2, " > ", mapped_sam_path, "'")
 message(cmd2)
 ok=system(cmd2)
 if (ok!=0){
@@ -106,31 +119,31 @@ if (ok!=0){
 }
 
 
-if (gzip_r1_flag){
-  cmd4=paste("rm -f",R1_file_path)
-  message(cmd4)
-  ok=system(cmd4)
-} else{
-  cmd4.1=paste("gzip",R1_file_path)
-   message(cmd4.1)
-  ok=system(cmd4.1)
-}
-if (ok!=0){
-  stop1("ERROR!")
-}
-
-if (gzip_r2_flag){
-  cmd5=paste("rm -f",R2_file_path)
-  message(cmd5)
-  ok=system(cmd5)
-} else{
-  cmd5.1=paste("gzip",R2_file_path)
-  message(cmd5.1)
-  ok=system(cmd5.1)
-}
-if (ok!=0){
-  stop1("ERROR!")
-}
+#if (gzip_r1_flag){
+#  cmd4=paste("rm -f",R1_file_path)
+#  message(cmd4)
+#  ok=system(cmd4)
+#} else{
+#  cmd4.1=paste("gzip",R1_file_path)
+#   message(cmd4.1)
+#  ok=system(cmd4.1)
+#}
+#if (ok!=0){
+#  stop1("ERROR!")
+#}
+#
+#if (gzip_r2_flag){
+#  cmd5=paste("rm -f",R2_file_path)
+#  message(cmd5)
+#  ok=system(cmd5)
+#} else{
+#  cmd5.1=paste("gzip",R2_file_path)
+#  message(cmd5.1)
+#  ok=system(cmd5.1)
+#}
+#if (ok!=0){
+#  stop1("ERROR!")
+#}
 
 cmd6=paste("rm -f",mapped_sam_path)
 message(cmd6)

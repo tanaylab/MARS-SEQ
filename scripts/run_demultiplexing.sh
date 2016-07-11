@@ -42,7 +42,7 @@ do
 	to=$N_AMP_BATCHES
   fi
   echo submitting $i-$to
-  qsub -wd $scdb_path -t $i-$to  $scRNA_scripts/distrib_demultiplex.sh >>qsub_log
+  qsub -q all.q@@dell6220-128g -wd $scdb_path -t $i-$to  $scRNA_scripts/distrib_demultiplex.sh >>qsub_log
   i=`echo $to+1| bc`
   sleep 30  
 

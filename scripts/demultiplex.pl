@@ -465,6 +465,7 @@ my %RMT_hash;
 my %rmt_stats;
 my %nuc_per_pos_stats;
 my @well_list=();
+my %phase_hash;
 
 
 # read sample_index
@@ -623,6 +624,21 @@ for (my $i=0;$i<length($pool_barcode);$i++){
 
 
 #############################################################
+# Define maternal and paternal genomes
+my $do_phasing = 0;
+my $maternal_genome = 'ref';
+my $paternal_genome = 'ref';
+if (exists $config_hash{'maternal_bcf'}) {
+    $do_phasing = 1;
+    ($maternal_genome) = ($config_hash{'maternal_bcf'} =~ /\/([^.\/]+)\.([^\/])+$/);
+}
+if (exists $config_hash{'paternal_bcf'}) {
+    $do_phasing = 1;
+    ($paternal_genome) = ($config_hash{'paternal_bcf'} =~ /\/([^.\/]+)\.([^\/])+$/);
+}
+
+
+#############################################################
 # Read Reads
 #
 
@@ -754,9 +770,10 @@ foreach my $fn (@fn) {
 	  }
       next;
     }
-## checking multi-mapping
+## checking multi-mapping and phasing
 	my $as=-1000;
 	my $xs=-1000;
+	my $phase='';
 	for (my $j=9;$j<=$#parsed_line;$j++){
 
 	  if ($parsed_line[$j]=~/^AS:i:/){
@@ -764,6 +781,11 @@ foreach my $fn (@fn) {
 	  }
 	  if ($parsed_line[$j]=~/^XS:i:/){
 		($xs=$parsed_line[$j]) =~ s/^XS:i://;
+	  }
+	  if ($parsed_line[$j]=~/^XV:Z:/) {
+	      my ($genome) = ($parsed_line[$j] =~ /([^:]*$)/);
+	      $phase = 'm' if ($genome eq $maternal_genome);
+	      $phase = 'p' if ($genome eq $paternal_genome);
 	  }
 	}
 	if (($xs>=$as)&($as>-1000)){
@@ -798,6 +820,9 @@ foreach my $fn (@fn) {
 	# incrementing read counts;
 	$hash1{$gene}->{"$pos\t$well_id\t$cell_barcode\t$RMT"}++;
 	
+	if ($do_phasing) {
+	   $phase_hash{"$gene\t$pos\t$well_id\t$cell_barcode\t$RMT"} .= $phase;
+	}
   }
 }
 
@@ -849,6 +874,20 @@ print "FDR_THRESHES:\t$fdr_thresh1\t$fdr_thresh2\n";
 # Writing umitab, offsetab, singleofftab
 print "Writing output files\n";
 open(UMITAB_FILE, ">$umitab_fn") || die "ERROR: cannot open file $umitab_fn to read.\n";
+if ($do_phasing) {
+    my ($unknown_fn, $maternal_fn, $paternal_fn) = ($umitab_fn, $umitab_fn, $umitab_fn);
+    $unknown_fn =~ s/(\.txt)?$/.unk$1/;
+    $maternal_fn =~ s/(\.txt)?$/.mat$1/;
+    $paternal_fn =~ s/(\.txt)?$/.pat$1/;
+    open(UMITAB_UNKNOWN_FILE, ">$unknown_fn") || die "ERROR: cannot open file $umitab_fn.unk to read.\n";
+    open(UMITAB_MATERNAL_FILE, ">$maternal_fn") || die "ERROR: cannot open file $umitab_fn.mat to read.\n";
+    open(UMITAB_PATERNAL_FILE, ">$paternal_fn") || die "ERROR: cannot open file $umitab_fn.pat to read.\n";
+
+    my $wells_header = join("\t", @well_list);
+    print UMITAB_UNKNOWN_FILE $wells_header, "\n";
+    print UMITAB_MATERNAL_FILE $wells_header, "\n";
+    print UMITAB_PATERNAL_FILE $wells_header, "\n";
+}
 open(OFFSETAB_FILE, ">$offsetab_fn") || die "ERROR: cannot open file $offsetab_fn to read.\n";
 open(SINGLEOFFTAB_FILE, ">$singleofftab_fn") || die "ERROR: cannot open file $singleofftab_fn to read.\n";
 print UMITAB_FILE $well_list[0];
@@ -881,6 +920,7 @@ for (my $j=0; $j<=$#genes;$j++){
 
   my %well_to_RMTs={};
   my %well_to_RMTs_ok={};
+  my %well_to_RMTs_phase={};
 
   my %wellgene_to_noffsets={};
   my %wellgene_to_nsingleton_offsets={};
@@ -949,10 +989,36 @@ for (my $j=0; $j<=$#genes;$j++){
 	  }elsif ($offsets_per_rmt{$well_gene_rmt}==2){
 		$wellgene_to_nsingleton_offsets{$well_gene}--;
 	  }
+	  
+	  if ($do_phasing) {
+          if (!exists $well_to_RMTs_phase{$wellid}){
+              $well_to_RMTs_phase{$wellid}={};
+          }	  
+    	  $well_to_RMTs_phase{$wellid}->{$RMT} .= $phase_hash{"$gene\t$off\t$wellid\t$barcode\t$RMT"};
+	  }
 	}
+  }
+  
+  if ($do_phasing) {
+      foreach my $wellid (@well_list) {
+          if (!exists $well_to_RMTs_phase{$wellid}) {
+              $well_to_RMTs_phase{$wellid} = { maternal => 0,  paternal => 0,  unknown => 0 };
+          }
+          else {
+              my $maternal = grep(/^m+$/, values %{$well_to_RMTs_phase{$wellid}});
+              my $paternal = grep(/^p+$/, values %{$well_to_RMTs_phase{$wellid}});
+              my $unknown  = (values %{$well_to_RMTs_phase{$wellid}}) - $maternal - $paternal;
+              $well_to_RMTs_phase{$wellid} = { maternal => $maternal,  paternal => $paternal,  unknown => $unknown };
+          }
+      }
   }
 
   print UMITAB_FILE $gene;
+  if ($do_phasing) {
+    print UMITAB_UNKNOWN_FILE $gene;      
+    print UMITAB_MATERNAL_FILE $gene;      
+    print UMITAB_PATERNAL_FILE $gene;      
+  }
   print OFFSETAB_FILE $gene;
   print SINGLEOFFTAB_FILE $gene;
   for (my $i=0;$i<=$#well_list;$i++){
@@ -969,14 +1035,29 @@ for (my $j=0; $j<=$#genes;$j++){
 	my $number_of_singleton_offsets=0+$wellgene_to_nsingleton_offsets{$well_list[$i]."\t".$gene};
 	
 	print UMITAB_FILE "\t".$number_of_RMTs;
+    if ($do_phasing) {
+        print UMITAB_UNKNOWN_FILE "\t", $well_to_RMTs_phase{$wellid}->{'unknown'};
+        print UMITAB_MATERNAL_FILE "\t", $well_to_RMTs_phase{$wellid}->{'maternal'};
+        print UMITAB_PATERNAL_FILE "\t", $well_to_RMTs_phase{$wellid}->{'paternal'};
+    }
 	print OFFSETAB_FILE "\t".$number_of_offsets;
 	print SINGLEOFFTAB_FILE "\t".$number_of_singleton_offsets;
   }
   print UMITAB_FILE "\n"; 
+    if ($do_phasing) {
+        print UMITAB_UNKNOWN_FILE "\n";
+        print UMITAB_MATERNAL_FILE "\n";
+        print UMITAB_PATERNAL_FILE "\n";
+    }
   print OFFSETAB_FILE "\n";
   print SINGLEOFFTAB_FILE "\n";
 }
 close(UMITAB_FILE);
+if ($do_phasing) {
+    close(UMITAB_PATERNAL_FILE);
+    close(UMITAB_MATERNAL_FILE);
+    close(UMITAB_UNKNOWN_FILE);
+}
 close(OFFSETAB_FILE);
 close(SINGLEOFFTAB_FILE);
 

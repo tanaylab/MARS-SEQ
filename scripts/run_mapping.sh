@@ -60,7 +60,7 @@ do
 	to=$NTASKS
   fi
    echo submitting $i-$to
-   qsub -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+   qsub -q all.q@@dell6220-128g -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
  
 
   i=`echo $to+1| bc`
