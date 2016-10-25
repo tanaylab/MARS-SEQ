@@ -2,32 +2,7 @@
 suppressPackageStartupMessages(library('dplyr'))
 library('optparse')
 library('misha')
-
-
-########################################################################
-KNOWN_GENE_COLS <- c('name',
-                     'chrom',
-                     'strand',
-                     'txStart',
-                     'txEnd',
-                     'cdsStart',
-                     'cdsEnd',
-                     'exonCount',
-                     'exonStarts',
-                     'exonEnds',
-                     'proteinID',
-                     'alignID')
-
-KG_XREF_COLS <- c('kgID',
-                  'mRNA',
-                  'spID',
-                  'spDisplayID',
-                  'geneSymbol',
-                  'refseq',
-                  'protAcc',
-                  'description',
-                  'rfamAcc',
-                  'tRnaName')
+source('../../../analysis/common/ucsc.r', chdir=TRUE)
 
 
 ########################################################################
@@ -38,12 +13,8 @@ main <- function(argv)
     gsetroot(command$root)
     
     # Read USCS tables
-    knownGene <- fread(qq('gzip -d -c @{command$ucsc}/knownGene.txt.gz'),
-                       sep='\t', header=FALSE, col.names=KNOWN_GENE_COLS)
-       
-    kgXref <- fread(qq('gzip -d -c @{command$ucsc}/kgXref.txt.gz'),
-                    sep='\t', select=1:8, header=FALSE, col.names=KG_XREF_COLS[1:8])      
-    
+    knownGene <- read_known_gene(file.path(command$ucsc, 'knownGene.txt.gz'))
+    kgXref <- read_kg_xref(file.path(command$ucsc, 'kgXref.txt.gz'))
 
     # Remove non-chromosome contigs and correct strand
     knownGene <- knownGene %>%
@@ -81,7 +52,7 @@ main <- function(argv)
                      select(chrom, start, end, strand, gene_name)
     
     knownGene <- rbind(knownGene_pos, knownGene_neg)
-    
+
     # Write table to disk
     write.table(knownGene, file=command$output, quote=FALSE, sep='\t', row.names=FALSE, col.names=TRUE)
 }
@@ -97,7 +68,7 @@ parse_command <- function(argv)
                     help="Directory holding UCSC tables (knownGene.txt.gz and kgXref.txt.gz)." )
     )
     
-    parser  <- OptionParser(usage='%prog  [OPTIONS]  <intervals_file.txt>', option_list=options_list)
+    parser  <- OptionParser(usage='%prog  [OPTIONS]  <output.txt>', option_list=options_list)
     parsed  <- parse_args(parser, argv, positional_arguments=TRUE)
     
     command <- list();
@@ -114,17 +85,6 @@ parse_command <- function(argv)
     
     return(command);
 }
-
-
-########################################################################
-fread <- function(...)
-{
-    return(as.data.frame(data.table::fread(...)))
-}
-
-
-########################################################################
-qq <- GetoptLong::qq 
 
 
 ########################################################################
