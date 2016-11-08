@@ -30,11 +30,11 @@ The script will upload the data to a specific folder, and also add a record in t
 - Each experiment (i.e. data from a specific paper, a single sequencing run etc.) will be located in a separate subdirectory. Related experiments should be grouped under one parent folder. For example:  
 	- /net/mraid14/export/tgdata/db/tgdb/mm9/scrdb/embryo/e8.5_20160101 
 	- /net/mraid14/export/tgdata/db/tgdb/mm9/scrdb/embryo/20160101
-- Each subdirectory will contain: **scdb.meta** file, describing the experiment; **cells.txt** file, describing each cell; **data.Rda** file, containing the gene expression counts of the cells.
+- Each subdirectory will contain: **scdb_meta.r** file, describing the experiment; **cells.txt** file, describing each cell; **data.Rda** file, containing the gene expression counts of the cells.
 
 
-#### scdb_meta.r
-A text file. contains the following fields: 
+** scdb_meta.r **
+An R text file. Contains the following parameters: 
 	
 Name | Type | Mandatory? | Example | Value 
 --- | :---: | --- | --- |---
@@ -46,8 +46,15 @@ paper | c | no | "Paul et al. (2015) Cell" | Paper name
 geo | list | no | list=("GSE72857", "GSE72858") | GEO accession numbers. 
 url | c | no | "" |  URL from which the dataset was downloaded. 
 
-####  cells.txt
-####  data.Rda
+**  cells.txt **
+A clear text table. Each  row represents a cell. Fields: 
+
+Name | Type | Mandatory? | Example | Value 
+--- | :---: | --- | --- |---
+cellID | c | yes | AB123W1234 | Cell names should be unique per experiment. (So in Mars-SEQ amp batch should be concatenated to well ID)
+umi_count | n | yes | 10324 | Total UMI count. used for quick filtering of cells. 
+
+**  data.Rda **
 	
 	
 	
