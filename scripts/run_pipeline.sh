@@ -22,7 +22,7 @@ dos2unix -q config/amp_batces_to_process.txt
 echo "--------------------------------------------------"
 echo "Running mapping"
 echo
-$scRNA_scripts/run_mapping.sh $scdb_path 16
+$scRNA_scripts/run_mapping.sh $scdb_path 12
 mapping_status=`cat $scdb_path/_logs/mapping_status`
 if [[ $mapping_status != "OK" ]]
 then

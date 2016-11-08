@@ -74,12 +74,12 @@ if (!is.null(config$bowtie_params)){
   additional_bowtie_params=paste(" ",config$bowtie_params,sep="")
 }
 cmd2=paste(config$bowtie_bin, "-x",config$bowtie_index,"-U",labeled_fastq_path,additional_bowtie_params,sep=" ")
-if (!is.na(config$maternal_bcf) || !is.na(config$paternal_bcf)) {
+if (!is.null(config$maternal_bcf) || !is.null(config$paternal_bcf)) {
     bcfs = character()
-    if (!is.na(config$maternal_bcf)) {
+    if (!is.null(config$maternal_bcf)) {
         bcfs = c(bcfs, config$maternal_bcf)
     }
-    if (!is.na(config$paternal_bcf)) {
+    if (!is.null(config$paternal_bcf)) {
         bcfs = c(bcfs, config$paternal_bcf)
     }
     hyppy = paste0("--bcf", 1:length(bcfs), " ",  bcfs, collapse=" ")

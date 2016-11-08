@@ -16,13 +16,16 @@ main <- function(argv)
     
     gene_names <- fread(command$names, sep='\t', header=TRUE)
     
+    known_gene <- known_gene %>%
+                  mutate(strand=ifelse(strand=='+', +1, -1))
+    
     gene_tss <- gene_names %>% 
-                inner_join(kg_xref, by='geneSymbol') %>%
-                inner_join(known_gene, by=c(kgID='name', 'chrom')) %>%
-                mutate(end=txStart+1) %>%
-                select(chrom, start=txStart, end, strand, gene_name) %>%
-                distinct() %>%
-                mutate(strand=recode(strand, '+'=+1, '-'=-1))
+                inner_join(kg_xref, by=c(gene_symbol='geneSymbol')) %>%
+                inner_join(known_gene, by=c(kgID='name', 'chrom', 'strand')) %>%
+                select(chrom, start=txStart, end=txEnd, strand, gene_name) %>%
+                mutate(start=ifelse(strand==+1, start, end-1)) %>%
+                mutate(end=ifelse(strand==+1, start+1, end)) %>%
+                distinct()
         
     write.table(gene_tss, command$output, sep='\t', quote=FALSE, col.names=TRUE, row.names=FALSE)
 } 
