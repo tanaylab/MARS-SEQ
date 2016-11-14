@@ -1,8 +1,6 @@
 #!/usr/bin/env Rscript
-suppressPackageStartupMessages(library('dplyr'))
 library('optparse')
-
-fread <- function(...) as.data.frame(data.table::fread(...), stringsAsFactors=FALSE)
+source('../../../analysis/common/tgverse.r', chdir=TRUE)
 
 
 ########################################################################
@@ -14,9 +12,9 @@ main <- function(argv)
     intervals <- intervals %>% filter(substr(chrom, 1, 4) != 'ERCC')
     
     gene_names <- intervals %>% 
-                  group_by(gene_name, chrom) %>%
-                  do(split_name(.$gene_name[1])) %>%
-                  select(gene_name, geneSymbol, chrom) %>%
+                  group_by(gene_name, chrom, strand) %>%
+                  do(split_name(first(.$gene_name[1]))) %>%
+                  select(gene_name, gene_symbol, chrom, strand) %>%
                   ungroup()
           
     write.table(gene_names, command$output, sep='\t', quote=FALSE, col.names=TRUE, row.names=FALSE)
@@ -50,7 +48,7 @@ parse_command <- function(argv)
 split_name <- function(gene_name)
 {
     names <- strsplit(gene_name, ';', fixed=TRUE)[[1]]
-    return(data.frame(gene_name=gene_name, geneSymbol=names, stringsAsFactors=FALSE))
+    return(tibble(gene_name=gene_name, gene_symbol=names))
 }
 
 

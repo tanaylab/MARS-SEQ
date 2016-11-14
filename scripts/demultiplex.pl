@@ -803,7 +803,9 @@ foreach my $fn (@fn) {
     }
 
     my $chr=$parsed_line[2];
-    $chr = 'chr'. $chr if (substr($chr, 0, 3) ne 'chr');
+    if ((substr($chr, 0, 3) ne 'chr') && (substr($chr, 0, 4) ne 'ERCC')) {
+        $chr = 'chr'. $chr;
+    }
     my $coor=$parsed_line[3];
     my $gene=map_to_gene($chr,$coor,$strand,\%binned_coordinate_to_gene_hash);
 	

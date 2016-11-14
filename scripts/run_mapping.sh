@@ -59,8 +59,8 @@ do
   if [ "$to" -gt "$NTASKS" ];then
 	to=$NTASKS
   fi
-   echo submitting $i-$to
-   qsub -q all.q@@dell6220-128g -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+  echo submitting $i-$to
+  qsub -q all.q@@dell6220-128g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
  
 
   i=`echo $to+1| bc`
