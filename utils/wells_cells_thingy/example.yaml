@@ -1,0 +1,43 @@
+defaults:
+    user: EC
+    spike_type: ERCC_mix1
+    spike_dilution: 0.000025
+    spike_volume: 0.01  #ul
+    barcodes: v3 # v1_g1g2  v3_g1g2  v3_g1g3  v3_g1g4  v3_g2g3  v3_g2g4  v3_g3g4
+    subject_id: B6_20s
+    empty_wells: B2 C3 F9 G10 J15 K16 N22 O23
+
+
+plates:
+    '0205':
+        amp_batch: ABEC0205
+    '0206':
+        amp_batch: ABEC0206
+    '0207':
+        amp_batch: ABEC0207
+    '0208':
+        amp_batch: ABEC0208
+    '0209':
+        amp_batch: ABEC0209
+    '0210':
+        amp_batch: ABEC0210
+    '0211':
+        amp_batch: ABEC0211
+    '0212':
+        amp_batch: ABEC0212
+    '0213':
+        amp_batch: ABEC0213
+    '0214':
+        amp_batch: ABEC0214
+    '0215':
+        amp_batch: ABEC0215
+    '0216':
+        amp_batch: ABEC0216
+    '0217':
+        amp_batch: ABEC0217
+    '0218':
+        amp_batch: ABEC0218
+    '0219':
+        amp_batch: ABEC0219
+    '0220':
+        amp_batch: ABEC0220
