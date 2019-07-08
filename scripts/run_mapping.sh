@@ -28,14 +28,14 @@ then
 	echo ANNOTATION ERROR!!!
 	cat $scdb_path/_logs/check_annots.log
 	exit
-fi 
+fi
 
 fastq_problems_flag=$($R_HOME/Rscript $scRNA_scripts/create_fastq_list.r $scdb_path/ $AMP_BATCHES_TO_PROCESS $FASTQ_LIST)
 if [ "$fastq_problems_flag" != 0 ]
 then
 	echo ANNOTATION ERROR!!!
 	exit
-fi 
+fi
 
 
 NJOBS=`wc -l $FASTQ_LIST | cut -f 1 -d ' '`
@@ -55,16 +55,16 @@ do
 	running_jobs=`qstat | tail -n +3 | wc -l `
   done
   to=`echo $i+$MAX_JOBS-$running_jobs-1 | bc`
- 
+
   if [ "$to" -gt "$NTASKS" ];then
 	to=$NTASKS
   fi
   echo submitting $i-$to
-  qsub -q all.q@@dell6220-128g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
- 
+  qsub -q all.q@@dell6420-384g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+
 
   i=`echo $to+1| bc`
-  sleep 30  
+  sleep 30
 
 done
 
