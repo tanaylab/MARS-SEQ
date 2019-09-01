@@ -73,7 +73,27 @@ additional_bowtie_params=""
 if (!is.null(config$bowtie_params)){
   additional_bowtie_params=paste(" ",config$bowtie_params,sep="")
 }
+
 cmd2=paste(config$bowtie_bin, "-x",config$bowtie_index,"-U",labeled_fastq_path,additional_bowtie_params,sep=" ")
+
+# use star mapper if defined in config and overwrite bowtie
+if (!is.null(config$star_bin))
+{
+  additional_star_params=""
+  if (!is.null(config$star_params))
+  {
+  additional_star_params=paste(" ",config$star_params,sep="")
+  }
+  cmd2 = paste(config$star_bin,
+               "--genomeDir", config$star_index,
+               "--readFilesIn", labeled_fastq_path,
+               additional_star_params,
+               "--outFileNamePrefix", paste0("_logs/star.",prefix,"."),
+               "--outStd SAM --outFilterMultimapScoreRange 2 --readFilesCommand zcat",
+               sep=" ")
+  cmd2 = paste('rm -f', mapped_sam_path, ';', cmd2)
+}
+
 if (!is.null(config$maternal_bcf) || !is.null(config$paternal_bcf)) {
     bcfs = character()
     if (!is.null(config$maternal_bcf)) {
