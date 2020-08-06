@@ -49,12 +49,12 @@ do
 done
 
 
-running_jobs=`qstat | tail -n +3 | wc -l `
+running_jobs=`qstat | tail -n +3 | awk '$5 != "dr"' | wc -l `
 
 while [ $running_jobs -gt 0 ]
 do
   sleep 10
-  running_jobs=`qstat | tail -n +3 | wc -l `
+  running_jobs=`qstat | tail -n +3 | awk '$5 != "dr"' | wc -l `
 done
 
 
