@@ -60,7 +60,8 @@ do
 	to=$NTASKS
   fi
   echo submitting $i-$to
-  qsub -q all.q@@dell6420-384g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+  # qsub -q all.q@@dell6420-384g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+  qsub -q all.q -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
 
 
   i=`echo $to+1| bc`

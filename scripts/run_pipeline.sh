@@ -22,7 +22,7 @@ dos2unix -q config/amp_batces_to_process.txt
 echo "--------------------------------------------------"
 echo "Running mapping"
 echo
-$scRNA_scripts/run_mapping.sh $scdb_path 30
+$scRNA_scripts/run_mapping.sh $scdb_path 40
 mapping_status=`cat $scdb_path/_logs/mapping_status`
 if [[ $mapping_status != "OK" ]]
 then
@@ -32,7 +32,7 @@ echo
 echo "--------------------------------------------------"
 echo "Running demultiplex"
 echo
-$scRNA_scripts/run_demultiplexing.sh $scdb_path 60
+$scRNA_scripts/run_demultiplexing.sh $scdb_path 120
 demultiplex_status=`cat $scdb_path/_logs/demultiplex_status`
 if [[ $demultiplex_status != "OK" ]]
 then
