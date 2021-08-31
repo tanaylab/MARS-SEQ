@@ -30,11 +30,11 @@ MAX_JOBS=$2
 i=1
 while [ "$i" -le $N_AMP_BATCHES ]
 do
-  running_jobs=`qstat | tail -n +3 | wc -l `
+  running_jobs=`qstat | tail -n +3 | grep scdb_demul | wc -l `
   while [ $running_jobs -ge $MAX_JOBS ]
 	do
 	sleep 10
-  running_jobs=`qstat | tail -n +3 | wc -l `
+  running_jobs=`qstat | tail -n +3 | grep scdb_demul | wc -l `
   done
   to=`echo $i+$MAX_JOBS-$running_jobs-1 | bc`
 
@@ -49,12 +49,12 @@ do
 done
 
 
-running_jobs=`qstat | tail -n +3 | awk '$5 != "dr"' | wc -l `
+running_jobs=`qstat | tail -n +3 | grep scdb_demul | awk '$5 != "dr"' | wc -l `
 
 while [ $running_jobs -gt 0 ]
 do
   sleep 10
-  running_jobs=`qstat | tail -n +3 | awk '$5 != "dr"' | wc -l `
+  running_jobs=`qstat | tail -n +3 | grep scdb_demul | awk '$5 != "dr"' | wc -l `
 done
 
 

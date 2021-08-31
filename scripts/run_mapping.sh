@@ -48,11 +48,11 @@ touch qsub_log
 i=1
 while [ "$i" -le $NTASKS ]
 do
-  running_jobs=`qstat | tail -n +3 | wc -l `
+  running_jobs=`qstat | tail -n +3 | grep scdb_map | wc -l `
   while [ $running_jobs -ge $MAX_JOBS ]
 	do
 	sleep 10
-	running_jobs=`qstat | tail -n +3 | wc -l `
+	running_jobs=`qstat | tail -n +3 | grep scdb_map | wc -l `
   done
   to=`echo $i+$MAX_JOBS-$running_jobs-1 | bc`
 
@@ -61,7 +61,7 @@ do
   fi
   echo submitting $i-$to
   # qsub -q all.q@@dell6420-384g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
-  qsub -q all.q -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+  qsub -q all.q -pe threads 5 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
 
 
   i=`echo $to+1| bc`
@@ -70,11 +70,11 @@ do
 done
 
 
-running_jobs=`qstat | tail -n +3 | awk '$5 != "dr"' | wc -l `
+running_jobs=`qstat | tail -n +3 | grep scdb_map | awk '$5 != "dr"' | wc -l `
 while [ $running_jobs -gt 0 ]
 do
   sleep 10
-  running_jobs=`qstat | tail -n +3 | awk '$5 != "dr"' | wc -l `
+  running_jobs=`qstat | tail -n +3 | grep scdb_map | awk '$5 != "dr"' | wc -l `
 done
 
 
