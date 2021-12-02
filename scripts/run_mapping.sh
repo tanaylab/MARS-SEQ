@@ -26,6 +26,7 @@ annot_problems_flag=$($R_HOME/Rscript $scRNA_scripts/check_annots.r $scdb_path/)
 if [ "$annot_problems_flag" != 0 ]
 then
 	echo ANNOTATION ERROR!!!
+	echo ANNOTATION ERROR!!! >&2
 	cat $scdb_path/_logs/check_annots.log
 	exit
 fi
@@ -34,6 +35,7 @@ fastq_problems_flag=$($R_HOME/Rscript $scRNA_scripts/create_fastq_list.r $scdb_p
 if [ "$fastq_problems_flag" != 0 ]
 then
 	echo ANNOTATION ERROR!!!
+	echo ANNOTATION ERROR!!! >&2
 	exit
 fi
 
