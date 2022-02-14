@@ -644,7 +644,7 @@ if (exists $config_hash{'paternal_bcf'}) {
 
 my @fn = <$scdb_path/_trimmed_mapped_reads/$seq_batch/*.sam>;
 
-if ($#fn<=0) {
+if ($#fn<0) {
  die("ERROR: $scdb_path/_trimmed_mapped_reads/$seq_batch/ dir doesn't contain sam files\n");
 }
 print "reading $#fn sam files\n";
