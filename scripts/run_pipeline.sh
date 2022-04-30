@@ -1,10 +1,17 @@
 #!/bin/sh
 #$ -S /bin/sh
 
-if [ "$#" -ne 1 ]
+module load ghostscript
+
+if [ "$#" -eq 2 ]
 then
-	echo usage : run_pipeline.sh scdb_path
-	exit
+    suffix=$2
+elif [ "$#" -eq 1 ]
+then
+    suffix=""
+else
+    echo usage : run_pipeline.sh scdb_path [suffix]
+    exit
 fi
 
 scdb_path=$1
@@ -22,7 +29,13 @@ dos2unix -q config/amp_batces_to_process.txt
 echo "--------------------------------------------------"
 echo "Running mapping"
 echo
-$scRNA_scripts/run_mapping.sh $scdb_path 40
+if [ "$suffix" = "" ]
+then
+    $scRNA_scripts/run_mapping.sh $scdb_path 40
+else
+    $scRNA_scripts/run_mapping.sh $scdb_path 40 $suffix
+fi
+
 mapping_status=`cat $scdb_path/_logs/mapping_status`
 if [[ $mapping_status != "OK" ]]
 then
@@ -32,7 +45,13 @@ echo
 echo "--------------------------------------------------"
 echo "Running demultiplex"
 echo
-$scRNA_scripts/run_demultiplexing.sh $scdb_path 120
+if [ "suffix" = "" ]
+then
+    $scRNA_scripts/run_demultiplexing.sh $scdb_path 120
+else
+    $scRNA_scripts/run_demultiplexing.sh $scdb_path 120 $suffix
+fi
+
 demultiplex_status=`cat $scdb_path/_logs/demultiplex_status`
 if [[ $demultiplex_status != "OK" ]]
 then
