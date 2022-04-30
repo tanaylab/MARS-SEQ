@@ -4,6 +4,11 @@
 #$ -e _logs/mapping_err.$TASK_ID
 #$ -o _logs/mapping_out.$TASK_ID
 
+if [ "$SGE_TASK_ID" = "" ]
+then
+    SGE_TASK_ID=$1
+fi
+
 echo TASK_ID=$SGE_TASK_ID 
 echo HOSTNAME=$HOSTNAME
 R_HOME=`grep R_HOME config/config.txt | cut -f2 -d"="`

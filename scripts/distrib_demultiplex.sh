@@ -4,6 +4,11 @@
 #$ -e _logs/demultiplex_err.$TASK_ID
 #$ -o _logs/demultiplex_out.$TASK_ID
 
+if [ "$SGE_TASK_ID" = "" ]
+then
+    export SGE_TASK_ID=$1
+fi
+
 AMP_BATCH_ID=`head -n $SGE_TASK_ID config/amp_batches_to_process.txt | tail -n 1`
 R_HOME=`grep R_HOME config/config.txt | cut -f2 -d"="`
 DATA_DIR=`grep data_dir config/qc_config.txt | cut -f2 -d"="`
