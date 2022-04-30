@@ -46,7 +46,15 @@ make_amp_batch_qc_fig=function(amp_batch_ID,output_dir="output"){
   
   batch_mask=sample_list$Well_ID[sample_list$Amp_batch_ID==amp_batch_ID]
   batch_details=amp_batches[amp_batches$Amp_batch_ID==amp_batch_ID,]
-  batch_title=paste("batch #",amp_batch_ID," (",paste(batch_details["Owner"]," Exp_ID=",batch_details["Experiment_ID"]," sss=",batch_details["sss"],sep=""),")",sep="")
+  batch_title  = paste( "batch # ", amp_batch_ID )
+  if ( !is.na( match( "Description", colnames( batch_details ) ) ) )
+    batch_title = paste0( batch_title, " , ", batch_details["Description"]  );
+  if ( !is.na( match( "Owner", colnames( batch_details ) ) ) )
+    batch_title = paste0( batch_title, " , ", batch_details["Owner"] );
+  if ( !is.na( match( "Experiment_ID", colnames( batch_details ) ) ) )
+    batch_title = paste0( batch_title, " , Exp_ID = ", batch_details["Experiment_ID"] );
+  if ( !is.na( match( "sss", colnames( batch_details ) ) ) )
+    batch_title = paste0( batch_title, " , sss = ", batch_details["sss"] );
 
   mask1=batch_mask[pmax(sample_list[batch_mask,"Number_of_cells"],-1)==1&sample_list[batch_mask,"is_primer_added"]==1]
   mask0=batch_mask[pmax(sample_list[batch_mask,"Number_of_cells"],-1)==0&sample_list[batch_mask,"is_primer_added"]==1]
