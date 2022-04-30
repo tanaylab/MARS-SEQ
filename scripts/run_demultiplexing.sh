@@ -2,10 +2,23 @@
 #$ -N bt
 #$ -S /bin/sh
 
-if [ "$#" -ne 2 ]
+if [ "$#" -eq 3 ]
 then
-	echo usage : run_demultiplexing.sh scdb_path njobs
-	exit
+    suffix=$3
+elif [ "$#" -eq 2 ]
+then
+    suffix=""
+else
+    echo usage : run_demultiplexing.sh scdb_path njobs suffix
+    exit
+fi
+
+if [ "$SGE_ROOT" = "" ]
+then
+    QCMD="bjobs"
+else
+    suffix=""
+    QCMD="qstat"
 fi
 
 scdb_path=`readlink -f $1`
@@ -28,33 +41,47 @@ echo "Demultiplexing $N_AMP_BATCHES amplificaiton batches" ;
 
 MAX_JOBS=$2
 i=1
+cd $scdb_path
 while [ "$i" -le $N_AMP_BATCHES ]
 do
-  running_jobs=`qstat | tail -n +3 | grep scdb_demul | wc -l `
+  running_jobs=`$QCMD | grep -c sc_dm$suffix `
   while [ $running_jobs -ge $MAX_JOBS ]
-	do
-	sleep 10
-  running_jobs=`qstat | tail -n +3 | grep scdb_demul | wc -l `
+    do
+    sleep 10
+  running_jobs=`$QCMD | grep -c sc_dm$suffix `
   done
   to=`echo $i+$MAX_JOBS-$running_jobs-1 | bc`
-
+ 
   if [ "$to" -gt "$N_AMP_BATCHES" ];then
-	to=$N_AMP_BATCHES
+    to=$N_AMP_BATCHES
   fi
   echo submitting $i-$to
-  qsub -q all.q -wd $scdb_path -t $i-$to  $scRNA_scripts/distrib_demultiplex.sh >>qsub_log
+
+  if [ "$QCMD" = "qstat" ]
+  then
+    qsub -wd $scdb_path -t $i-$to  $scRNA_scripts/distrib_demultiplex.sh >>qsub_log
+  else
+     if [ "$LSB_QUEUE" = "" ]
+     then
+        $scRNA_scripts/cmds_runner.py \
+        "bsub -oo _logs/demultiplex_{c1}.out -eo _logs/demultiplex_{c1}.err -J {c1}_sc_dm$suffix -R rusage[mem=32000] $scRNA_scripts/distrib_demultiplex.sh {c1} " $i:$to >> qsub_log
+     else
+        $scRNA_scripts/cmds_runner.py \
+        "bsub -q $LSB_QUEUE -oo _logs/demultiplex_{c1}.out -eo _logs/demultiplex_{c1}.err -J {c1}_sc_dm$suffix -R rusage[mem=32000] $scRNA_scripts/distrib_demultiplex.sh {c1} " $i:$to >> qsub_log
+     fi
+  fi
   i=`echo $to+1| bc`
-  sleep 30
+  sleep 30  
 
 done
 
 
-running_jobs=`qstat | tail -n +3 | grep scdb_demul | awk '$5 != "dr"' | wc -l `
+running_jobs=`$QCMD | grep -c sc_dm$suffix `
 
 while [ $running_jobs -gt 0 ]
 do
   sleep 10
-  running_jobs=`qstat | tail -n +3 | grep scdb_demul | awk '$5 != "dr"' | wc -l `
+  running_jobs=`$QCMD | grep -c sc_dm$suffix `
 done
 
 

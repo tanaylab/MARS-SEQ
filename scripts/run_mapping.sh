@@ -1,10 +1,24 @@
 #!/bin/sh
 #$ -S /bin/sh
 
-if [ "$#" -ne 2 ]
+if [ "$#" -eq 3 ]
 then
-	echo usage : run_mapping.sh scdb_path njobs
-	exit
+    suffix=$3
+elif [ "$#" -eq 2 ]
+then
+    suffix=""
+else
+    echo usage : run_mapping.sh scdb_path njobs suffix
+    exit
+fi
+
+
+if [ "$SGE_ROOT" = "" ]
+then
+    QCMD="bjobs"
+else
+    suffix=""
+    QCMD="qstat"
 fi
 
 scdb_path=`readlink -f $1`
@@ -48,35 +62,47 @@ MAX_JOBS=$2
 echo Mapping $NTASKS fastq files
 touch qsub_log
 i=1
+cd $scdb_path
 while [ "$i" -le $NTASKS ]
 do
-  running_jobs=`qstat | tail -n +3 | grep scdb_map | wc -l `
+  running_jobs=`$QCMD | grep -c sc_mp$suffix `
   while [ $running_jobs -ge $MAX_JOBS ]
-	do
-	sleep 10
-	running_jobs=`qstat | tail -n +3 | grep scdb_map | wc -l `
+    do
+    sleep 10
+    running_jobs=`$QCMD | grep -c sc_mp$suffix `
   done
   to=`echo $i+$MAX_JOBS-$running_jobs-1 | bc`
-
+ 
   if [ "$to" -gt "$NTASKS" ];then
-	to=$NTASKS
+    to=$NTASKS
   fi
-  echo submitting $i-$to
-  # qsub -q all.q@@dell6420-384g -pe threads 20 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
-  qsub -q all.q -pe threads 5 -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
-
+   echo submitting $i-$to
+   if [ "$QCMD" = "qstat" ]
+   then
+       qsub -wd $scdb_path -t $i-$to $scRNA_scripts/distrib_mapping.sh >>qsub_log
+   else
+       if [ "$LSB_QUEUE" = "" ]
+       then
+           $scRNA_scripts/cmds_runner.py \
+           "bsub -oo _logs/mapping_{c1}.out -eo _logs/mapping_{c1}.err -J {c1}_sc_mp$suffix -n 10 -R rusage[mem=5000] -R span[hosts=1] $scRNA_scripts/distrib_mapping.sh {c1} " $i:$to >> qsub_log
+       else
+           $scRNA_scripts/cmds_runner.py \
+           "bsub -q $LSB_QUEUE -oo _logs/mapping_{c1}.out -eo _logs/mapping_{c1}.err -J {c1}_sc_mp$suffix -n 10 -R rusage[mem=5000] -R span[hosts=1] $scRNA_scripts/distrib_mapping.sh {c1} " $i:$to >> qsub_log
+       fi
+   fi
+ 
 
   i=`echo $to+1| bc`
-  sleep 30
+  sleep 30  
 
 done
 
 
-running_jobs=`qstat | tail -n +3 | grep scdb_map | awk '$5 != "dr"' | wc -l `
+running_jobs=`$QCMD | grep -c sc_mp$suffix `
 while [ $running_jobs -gt 0 ]
 do
   sleep 10
-  running_jobs=`qstat | tail -n +3 | grep scdb_map | awk '$5 != "dr"' | wc -l `
+  running_jobs=`$QCMD | grep -c sc_mp$suffix `
 done
 
 
