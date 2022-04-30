@@ -110,7 +110,7 @@ cmd2 = paste0("/bin/bash -c 'source ~/.bashrc;", cmd2, " > ", mapped_sam_path, "
 message(cmd2)
 ok=system(cmd2)
 if (ok!=0){
-  stop1("ERROR: bowtie2 crashed!")
+  stop1("ERROR: STAR / bowtie crashed!")
 }
 
 #cmd2.5=paste("gzip -f",labeled_fastq_path)
