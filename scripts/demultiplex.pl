@@ -103,6 +103,11 @@ if (exists $config_hash{"fdr_offset_err"}){
   $fdr=$config_hash{"fdr_offset_err"};
 }
 
+my $add_chr = 1;
+if (exists $config_hash{"add_chr"}){
+  $add_chr=$config_hash{"add_chr"};
+}
+
 my $gene_intervals_fn=$scdb_path."/".$config_hash{"gene_intervals_file"};
 my $spike_seq_fn=$scdb_path."/".$config_hash{"spike_seq_file"};
 my $oligos_fn=$scdb_path."/".$config_hash{"oligos_file"};
@@ -720,9 +725,9 @@ foreach my $fn (@fn) {
 	my $cur_wellbarcode_quality=$parsed_header[$#parsed_header-4];
 	my $cur_RMT_quality=$parsed_header[$#parsed_header-3];
 
-    my $cell_barcode=$parsed_header[$#parsed_header-1];
+	my $cell_barcode=$parsed_header[$#parsed_header-1];
 	my $RMT= $parsed_header[$#parsed_header];
-    my $flag=$parsed_line[1];
+	my $flag=$parsed_line[1];
 	my $mapq=$parsed_line[4];
 
 	my $strand=1;  
@@ -803,9 +808,11 @@ foreach my $fn (@fn) {
     }
 
     my $chr=$parsed_line[2];
-    if ((substr($chr, 0, 3) ne 'chr') && (substr($chr, 0, 4) ne 'ERCC')) {
-        $chr = 'chr'. $chr;
-    }
+    if ( $add_chr ){
+	    if ((substr($chr, 0, 3) ne 'chr') && (substr($chr, 0, 4) ne 'ERCC')) {
+	        $chr = 'chr'. $chr;
+	    }
+		}
     my $coor=$parsed_line[3];
     my $gene=map_to_gene($chr,$coor,$strand,\%binned_coordinate_to_gene_hash);
 	
