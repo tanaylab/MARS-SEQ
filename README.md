@@ -1,4 +1,7 @@
+[![DOI](https://zenodo.org/badge/480481965.svg)](https://zenodo.org/badge/latestdoi/480481965)
+
 # MARS-SEQ
+
 MARS-SEQ analysis pipeline (scrna module from tlsrc): 
 https://doi.org/10.1038/s41596-019-0164-4
 
